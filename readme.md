@@ -1,8 +1,8 @@
 # SYNOPSIS
-This module provisions Virtual Machines accross Azure and Hyper-V
+This module provisions Virtual Machines accross Azure and Hyper-V. It's a set of multiple VMs.
 
 # DESCRIPTION
-Use this script to provision / duplicate demo environments (which ware not generalized). It copies vhd files directly and creates new VM definition in Azure.
+Use this script to provision / duplicate demo environments (which ware not generalized). It copies vhd files directly and creates new VM definition in Azure. My case was SharePoint environment including (AD, SQL, SharePoint 2013 & 2016, Office Online, Exchange, Windows Client). This can be useful within companies to distribute same test or dev environment.
 New is it to download those vhd only and then to create VMs on Hyper-V
 
 # EXAMPLE
