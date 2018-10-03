@@ -18,8 +18,10 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 2. Create your demo environment on Azure (Virtual Machines), based on multiple machines (No Managed Disks in the template). Currently there's a fixed naming schema, but feel free to contribute to this project:
   - Contoso-AD
   - Contoso-SQL
+  - Contoso-Client
   - Contoso-SP2013
   - Contoso-SP2016
+  - Contoso-SP2019
   - Contoso-Office
   - Contoso-Exchange
 3. Change the Contoso\VMD-Config.xml and add 
@@ -35,6 +37,15 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier.net
 
 # History
+V3.7
+- New: Support for new VM SharePoint 2019
+- New: Support for new VM Client (idea, Windows 10 including Office, OneDrive for Business)
+- New: ADFS Support
+- Fix: Azure CLI supports now new module names like Az.Compute...
+- Fix: Encoding Error in VMDFunctions line 410 & 411 regarding credentials
+- Fix: Null the output of Azure Managed Disk Conversion
+- Fix: New-VMDPSModule specify VMD-Config.xml
+
 V3.6
 - New: Linux Cloud Shell Support and therefore Refactoring and new ContosoFunctions.ps1 and two releases of this module (Windows and Linux)
 - New: Changed cmdlet Reload-Contoso to Reset-VMDAuthentication (supported verb)

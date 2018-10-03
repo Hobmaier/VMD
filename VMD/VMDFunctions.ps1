@@ -44,6 +44,13 @@ function Connect-VMD
         Write-host 'Stored AzureProfile found'
         #load cached profile
         Import-AzureRmContext -Path $filePath
+        
+        #If using ADFS this doesn't work and it wouldn't return any subscriptions
+        If (!(Get-AzureRMSubscription)) { 
+            #Log-in again and it should be fine
+            Login-AzureRMAccount 
+        }
+
     }
 
     # Get all subscriptions
@@ -75,7 +82,7 @@ function Start-VMD
         $AzureResourceGroup,
         [Parameter(Mandatory=$false)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('SQLonly','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','All')]
+        [ValidateSet('SQLonly','SQLandClient','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','SP2019UseCases','SP2019WithOfficeOnline','SP2019WithOfficeMail','All')]
         [string]
         $Scenario,
         [Parameter(Mandatory=$false,ParameterSetName='HyperV')]
@@ -393,7 +400,9 @@ function New-VMDInstance
                         @('SQL','Standard_DS2_v2', "10.0.$SubnetOctet.11"), `
                         @('SP2013','Standard_DS11_v2', "10.0.$SubnetOctet.12"), `
                         @('SP2016','Standard_DS11_v2', "10.0.$SubnetOctet.13"), `
+                        @('SP2019','Standard_DS11_v2', "10.0.$SubnetOctet.16"), `
                         @('Office', 'Standard_DS1_v2', "10.0.$SubnetOctet.14"), `
+                        @('Client', 'Standard_DS1_v2', "10.0.$SubnetOctet.17"), `
                         @('Mail', 'Standard_DS2_v2', "10.0.$SubnetOctet.15")
     }
     #Should be in the same subnet than above
@@ -405,8 +414,8 @@ function New-VMDInstance
     # Credentials for Local Admin account you created in the sysprepped (generalized) vhd image
     $VMLocalAdminUser = $XMLconfig.VMDup.GlobalConfiguration.Username.Name
     $VMLocalAdminSecurePassword = ConvertTo-SecureString $XMLconfig.VMDup.GlobalConfiguration.Password.Value -AsPlainText -Force 
-    $Credentials = New-Object System.Management.Automation.PSCredential `
-         -ArgumentList $VMLocalAdminUser, $VMLocalAdminSecurePassword 
+    $Credentials = New-Object System.Management.Automation.PSCredential `
+        -ArgumentList $VMLocalAdminUser, $VMLocalAdminSecurePassword 
     ## Azure Account
     $InstanceName = $Prefix + '-Contoso'
     Write-Host 'Instance Name ' $InstanceName
@@ -678,11 +687,16 @@ function New-VMDInstance
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SP2013201618131334.vhd"
                 } elseif ($VirtualMachine[0] -eq 'SP2016') {
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SP2016201622215411.vhd"
+                } elseif ($VirtualMachine[0] -eq 'SP2019'){
+                    $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/DNS8-Contoso-1920180806102741.vhd"
                 } elseif ($VirtualMachine[0] -eq 'Office'){
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-Office2016822162630.vhd"
                 } elseif ($VirtualMachine[0] -eq 'Mail'){
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-Mail20170425162213.vhd"
-                }
+                } elseif ($VirtualMachine[0] -eq 'Client'){
+                    $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/DNS8-Contoso-CL20180517145702.vhd"
+                } 
+
                 $vm = New-VMDVM -InstanceName $InstanceName `
                         -VirtualMachinePartialName $VirtualMachine[0] `
                         -VMSize $VirtualMachine[1] `
@@ -701,9 +715,9 @@ function New-VMDInstance
                 Write-Host 'Now convert machines to use managed disks for better performance'
                 Write-Host 'Stop VM first'
                 $VMName = $InstanceName + "-" + $VirtualMachine[0]
-                Stop-AzureRmVM -Name $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName -Force
+                $null = Stop-AzureRmVM -Name $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName -Force
                 Write-Host 'Done. Now Convert it'
-                ConvertTo-AzureRmVMManagedDisk -VMName $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName
+                $null = ConvertTo-AzureRmVMManagedDisk -VMName $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName
                 Write-Host 'Done. VM starting again - wait 2 minutes ;-)'
                 Start-Sleep -Seconds 120
             }
@@ -887,7 +901,7 @@ function Get-VMDStartSequence
         $AzureResourceGroup,
         [Parameter(Mandatory = $false)]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('SQLonly','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','all')]
+        [ValidateSet('SQLonly','SQLandClient','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','SP2019UseCases','SP2019WithOfficeOnline','SP2019WithOfficeMail','All')]
         [string]
         $Scenario,
         [Parameter(Mandatory = $false, ParameterSetName = 'HyperV')]
@@ -899,13 +913,18 @@ function Get-VMDStartSequence
 
     switch ($Scenario) {
         SQLonly { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL") }
+        SQLandClient { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-Client") }
         SP2013UseCases {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2013")}
         SP2013WithOfficeOnline {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office")}
         SP2013WithOfficeMail {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-Mail")}
         SP2016UseCases {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2016")}
         SP2016WithOfficeOnline {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-Office")}
         SP2016WithOfficeMail {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-Mail")}
-        all {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-Mail")}
+        SP2019UseCases { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2019") }
+        SP2019WithOfficeOnline { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2019", "$($Prefix)Contoso-Office") }
+        SP2019WithOfficeOnlineAndClient { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2019", "$($Prefix)Contoso-Client", "$($Prefix)Contoso-Office") }
+        SP2019WithOfficeMail { return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-SP2019", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-Mail") }
+        all {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-Client", "$($Prefix)Contoso-SP2019", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-Mail")}
         Default {return @( "$($Prefix)Contoso-AD", "$($Prefix)Contoso-SQL")}
     }
     
@@ -923,7 +942,7 @@ function Get-VMDStopSequence
     )
     if ($AzureResourceGroup) { $Prefix = $AzureResourceGroup.substring(0,$AzureResourceGroup.LastIndexOf('-') +1)}
     if ($HyperVPrefix) {$Prefix = "$($HyperVPrefix)-"}
-    return @( "$($Prefix)Contoso-Mail", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-AD")
+    return @( "$($Prefix)Contoso-Mail", "$($Prefix)Contoso-SP2016", "$($Prefix)Contoso-SP2013", "$($Prefix)Contoso-Office","$($Prefix)Contoso-SP2019","$($Prefix)Contoso-Client", "$($Prefix)Contoso-SQL", "$($Prefix)Contoso-AD")
 }
 
 function Get-VMDStatus
@@ -1000,7 +1019,7 @@ function Select-VMDScenario
     param (
         
     )
-    $Scenarios = @('SQLonly','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','all')
+    $Scenarios = @('SQLonly','SQLandClient','SP2013UseCases','SP2013WithOfficeOnline','SP2013WithOfficeMail','SP2016UseCases','SP2016WithOfficeOnline','SP2016WithOfficeMail','SP2019UseCases','SP2019WithOfficeOnline','SP2019WithOfficeMail','All')
     $i = 1
     foreach ($Scenario in $Scenarios)
     {

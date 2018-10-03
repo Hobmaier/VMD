@@ -55,7 +55,7 @@ function New-VMDManifest
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '3.6' `
+        -ModuleVersion '3.7' `
         -RequiredModules 'AzureRM.Profile','AzureRM.Storage','AzureRM.Compute', 'AzureRM.Network', 'AzureRM.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `
@@ -70,8 +70,8 @@ function New-VMDManifestLinux
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '3.6' `
-        -RequiredModules 'AzureRM.Profile.Netcore','AzureRM.Storage.Netcore','AzureRM.Compute.Netcore', 'AzureRM.Network.Netcore', 'AzureRM.Resources.Netcore' `
+        -ModuleVersion '3.7' `
+        -RequiredModules 'Az.Profile','Az.Storage', 'Az.Compute', 'Az.Network', 'Az.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `
             'Set-VMNetworkConfiguration','Set-Pagefile','Reset-VMDAuthentication' `
@@ -102,7 +102,7 @@ foreach ($path in $paths)
     {
          Write-Host 'Install PowerShell Module to ' $path
          Copy-Item $PSScriptRoot\VMD $path -Force -Recurse -ErrorAction stop
-         If ($AzureStorageConfigXMLPath) {Copy-Item $AzureStorageConfigXMLPath -Destination $path -Force}
+         If ($AzureStorageConfigXMLPath) {Copy-Item $AzureStorageConfigXMLPath -Destination $path\VMD\VMD-Config.xml -Force}
     }
 }
 
