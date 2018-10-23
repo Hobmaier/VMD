@@ -394,17 +394,24 @@ function New-VMDInstance
     {
         $VirtualMachines = @('AD', 'Standard_A0', "10.0.$SubnetOctet.10"), `
                         @('SQL','Standard_DS2_v2', "10.0.$SubnetOctet.11"), `
-                        @('SP2016','Standard_DS11_v2', "10.0.$SubnetOctet.13")
+                        @('SP2016','Standard_D4s_v3', "10.0.$SubnetOctet.13")
     } else {
         $VirtualMachines = @('AD', 'Standard_A0', "10.0.$SubnetOctet.10"), `
                         @('SQL','Standard_DS2_v2', "10.0.$SubnetOctet.11"), `
-                        @('SP2013','Standard_DS11_v2', "10.0.$SubnetOctet.12"), `
-                        @('SP2016','Standard_DS11_v2', "10.0.$SubnetOctet.13"), `
-                        @('SP2019','Standard_DS11_v2', "10.0.$SubnetOctet.16"), `
+                        @('SP2013','Standard_D4s_v3', "10.0.$SubnetOctet.12"), `
+                        @('SP2016','Standard_D4s_v3', "10.0.$SubnetOctet.13"), `
+                        @('SP2019','Standard_D4s_v3', "10.0.$SubnetOctet.17"), `
                         @('Office', 'Standard_DS1_v2', "10.0.$SubnetOctet.14"), `
-                        @('Client', 'Standard_DS1_v2', "10.0.$SubnetOctet.17"), `
+                        @('Client', 'Standard_DS1_v2', "10.0.$SubnetOctet.16"), `
                         @('Mail', 'Standard_DS2_v2', "10.0.$SubnetOctet.15")
     }
+    # Standard_D4s_v3 = 4 vCores, 16 GB RAM, Premiumd Disk supported ~ 150 €/month
+    # Standard_DS11_v2 = 2 vCores, 14 GB RAM ~ 120 €/month
+    # Standard_DS2_v2 = 2 vCores, 7 GB RAM ~ 85 €/month
+    # Standard_A0 = 1 vCore, 0,75 GB RAM ~ 12 €/month
+    # Standard_DS1_v2 = 1 vCore, 3,5 GB RAM ~ 42 €/month
+
+
     #Should be in the same subnet than above
     $HyperVHostVMIP = "10.0.$SubnetOctet.1"
 
@@ -688,7 +695,7 @@ function New-VMDInstance
                 } elseif ($VirtualMachine[0] -eq 'SP2016') {
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SP2016201622215411.vhd"
                 } elseif ($VirtualMachine[0] -eq 'SP2019'){
-                    $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/DNS8-Contoso-1920180806102741.vhd"
+                    $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SP201920181023114007.vhd"
                 } elseif ($VirtualMachine[0] -eq 'Office'){
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-Office2016822162630.vhd"
                 } elseif ($VirtualMachine[0] -eq 'Mail'){

@@ -37,6 +37,11 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier.net
 
 # History
+V3.8
+- New: Well hard-coded vhd name of SharePoint 2019
+- New: Updated Azure Virtual Machines sizes to min 4x cores (from Standard_DS11_v2 to Standard_D4s_v3)
+- Fix: Changed the IP configuration within the VMs for Client and SP2019
+
 V3.7
 - New: Support for new VM SharePoint 2019
 - New: Support for new VM Client (idea, Windows 10 including Office, OneDrive for Business)
