@@ -19,7 +19,7 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 https://www.hobmaier.net
 
 #>
-Write-Host 'VMD Module Version V 3.7'
+Write-Host 'VMD Module Version V 3.8'
 . "$PSScriptRoot/VMDFunctions.ps1"
 
 #Load Azure
