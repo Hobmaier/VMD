@@ -403,13 +403,14 @@ function New-VMDInstance
                         @('SP2019','Standard_D4s_v3', "10.0.$SubnetOctet.17"), `
                         @('Office', 'Standard_DS1_v2', "10.0.$SubnetOctet.14"), `
                         @('Client', 'Standard_DS1_v2', "10.0.$SubnetOctet.16"), `
-                        @('Mail', 'Standard_DS2_v2', "10.0.$SubnetOctet.15")
+                        @('Mail', 'Standard_A2m_v2', "10.0.$SubnetOctet.15")
     }
-    # Standard_D4s_v3 = 4 vCores, 16 GB RAM, Premiumd Disk supported ~ 150 €/month
+    # Standard_D4s_v3 = 4 vCores, 16 GB RAM, Premium Disk supported ~ 150 €/month
     # Standard_DS11_v2 = 2 vCores, 14 GB RAM ~ 120 €/month
     # Standard_DS2_v2 = 2 vCores, 7 GB RAM ~ 85 €/month
     # Standard_A0 = 1 vCore, 0,75 GB RAM ~ 12 €/month
     # Standard_DS1_v2 = 1 vCore, 3,5 GB RAM ~ 42 €/month
+    # Standard_A2m_v2 = 2 vCore, 16 GB RAM, NO Premium Disk supported ~ 78 €/month
 
 
     #Should be in the same subnet than above
@@ -1174,6 +1175,40 @@ function New-VMDHyperV
                 }
                 Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2016") -SwitchName "$($Prefix)-VMD-Internal"
                 }
+        SP2016 {
+                If (!$ConfigureMinimumRAM)
+                {
+                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+                } else {
+                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+                }
+                set-vm -name ("$($Prefix)-Contoso-SP2016") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
+                If ($UseDifferencingDisks)
+                {
+                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
+                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
+                } else {
+                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd")
+                }
+                Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2016") -SwitchName "$($Prefix)-VMD-Internal"
+                }
+        SP2019 {
+            If (!$ConfigureMinimumRAM)
+            {
+                new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+            } else {
+                new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+            }
+            set-vm -name ("$($Prefix)-Contoso-SP2019") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
+            If ($UseDifferencingDisks)
+            {
+                New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
+                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
+            } else {
+                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd")
+            }
+            Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2019") -SwitchName "$($Prefix)-VMD-Internal"
+            }                                
         Office {
                 If (!$ConfigureMinimumRAM)
                 {
@@ -1209,6 +1244,23 @@ function New-VMDHyperV
                 }
                 Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-Mail") -SwitchName "$($Prefix)-VMD-Internal"            
             }
+        Client {
+            If (!$ConfigureMinimumRAM)
+            {
+                new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 4096MB -Generation 1 -BootDevice IDE -NoVHD
+            } else {
+                new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 2048MB -Generation 1 -BootDevice IDE -NoVHD
+            }
+            set-vm -name ("$($Prefix)-Contoso-Client") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
+            If ($UseDifferencingDisks)
+            {
+                New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "DNS8-Contoso-CL20180517145702.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Client-differencing.vhd")
+                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Client") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Client-differencing.vhd")
+            } else {
+                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Client") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "DNS8-Contoso-CL20180517145702.vhd")
+            }
+            Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-Client") -SwitchName "$($Prefix)-VMD-Internal"
+            }              
         Default {
             Write-Host 'No VM selected'
                 }

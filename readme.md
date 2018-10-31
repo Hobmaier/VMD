@@ -40,6 +40,8 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 V3.8
 - New: Well hard-coded vhd name of SharePoint 2019
 - New: Updated Azure Virtual Machines sizes to min 4x cores (from Standard_DS11_v2 to Standard_D4s_v3)
+- New: Changed Sizing von Contoso-Mail to Standard_A2m_v2 (double the RAM)
+- New: Hyper-V Support for SharePoint 2019 and Client
 - Fix: Changed the IP configuration within the VMs for Client and SP2019
 
 V3.7
