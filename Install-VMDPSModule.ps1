@@ -1,3 +1,29 @@
+<#
+
+.SYNOPSIS
+    Install the VMD PowerShell module
+
+.DESCRIPTION
+    This script will install the VMD PowerShell module into users directory.
+
+.PARAMETER AzureStorageConfigXMLPath
+    Full path to your XML Path which includes custom storage accounts, e.g. c:\temp\DNS8-VMD-Config.xml
+
+.EXAMPLE
+    Install-VMDPSModule.ps1
+    This will install the PowerShell module into users PowerShell directory
+
+.EXAMPLE
+    Install-VMDPSModule.ps1 -AzureStorageConfigXMLPath c:\temp\VMD-Config.xml
+    This will install the PowerShell module and copies your custom VMD-Config.xml into the correct directory
+
+#> 
+
+param (
+    [Parameter(Mandatory = $false)]
+    [ValidateScript({Test-Path $_})]
+    $AzureStorageConfigXMLPath
+)
 Write-host 'Installing VMD PowerShell Module'
 # Global Install
 # Copy-Item $PSScriptRoot\UDESetup $Env:ProgramFiles\WindowsPowerShell\Modules\ -Force -Recurse
@@ -22,6 +48,7 @@ foreach ($path in $paths)
          }
          If (!(Get-Item $path\VMD -ErrorAction SilentlyContinue)) { mkdir $path\VMD }
          Copy-Item $PSScriptRoot\VMD $path -Force -Recurse -ErrorAction stop
+         If ($AzureStorageConfigXMLPath) {Copy-Item $AzureStorageConfigXMLPath -Destination $path\VMD\VMD-Config.xml -Force}
     }
 }
 
