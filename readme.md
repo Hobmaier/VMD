@@ -6,9 +6,9 @@ Use this script to provision / duplicate demo environments (which ware not gener
 New is it to download those vhd only and then to create VMs on Hyper-V
 
 # EXAMPLE
-./Import-Module Contoso
-connect-Contoso
-New-ContosoInstance -Prefix QA
+./Import-Module VMD
+connect-VMD
+New-VMDInstance -Prefix QA
 
 # NOTES
 All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailserver, Office Online...
@@ -39,6 +39,7 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 # History
 V3.9
 - Fix: Hyper-V SP2016 got created duplicate VM
+- Fix: Corrected readme examples
 - New: Updated Pre-Req files folder (either run install-module AzureRM or run files from within the PreReq folder)
 
 V3.8 - Release 2
