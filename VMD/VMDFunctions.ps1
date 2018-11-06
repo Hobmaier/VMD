@@ -1175,40 +1175,23 @@ function New-VMDHyperV
                 }
                 Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2016") -SwitchName "$($Prefix)-VMD-Internal"
                 }
-        SP2016 {
+        SP2019 {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+                    new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+                    new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
                 }
-                set-vm -name ("$($Prefix)-Contoso-SP2016") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
+                set-vm -name ("$($Prefix)-Contoso-SP2019") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
-                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
+                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
+                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
                 } else {
-                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd")
+                    Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd")
                 }
-                Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2016") -SwitchName "$($Prefix)-VMD-Internal"
-                }
-        SP2019 {
-            If (!$ConfigureMinimumRAM)
-            {
-                new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
-            } else {
-                new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
-            }
-            set-vm -name ("$($Prefix)-Contoso-SP2019") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
-            If ($UseDifferencingDisks)
-            {
-                New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
-                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
-            } else {
-                Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd")
-            }
-            Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2019") -SwitchName "$($Prefix)-VMD-Internal"
-            }                                
+                Connect-VMNetworkAdapter -VMName ("$($Prefix)-contoso-SP2019") -SwitchName "$($Prefix)-VMD-Internal"
+                }                                
         Office {
                 If (!$ConfigureMinimumRAM)
                 {

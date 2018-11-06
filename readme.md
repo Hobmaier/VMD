@@ -37,12 +37,19 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier.net
 
 # History
+V3.9
+- Fix: Hyper-V SP2016 got created duplicate VM
+- New: Updated Pre-Req files folder (either run install-module AzureRM or run files from within the PreReq folder)
+
+V3.8 - Release 2
+- New: Install-VMDPSModule supports switch -AzureStorageConfigXMLPath
+- New: Added documentation/help for Install-VMDPSModule.ps1
+
 V3.8
 - New: Well hard-coded vhd name of SharePoint 2019
 - New: Updated Azure Virtual Machines sizes to min 4x cores (from Standard_DS11_v2 to Standard_D4s_v3)
 - New: Changed Sizing von Contoso-Mail to Standard_A2m_v2 (double the RAM)
 - New: Hyper-V Support for SharePoint 2019 and Client
-- New: Install-VMDPSModule supports switch -AzureStorageConfigXMLPath
 - Fix: Changed the IP configuration within the VMs for Client and SP2019
 
 V3.7
