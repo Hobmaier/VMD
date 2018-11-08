@@ -40,6 +40,7 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 V3.9
 - Fix: Hyper-V SP2016 got created duplicate VM
 - Fix: Corrected readme examples
+- Fix: Hpyer-V Windows 10 Hearbeat will return different value during creation/start
 - New: Updated Pre-Req files folder (either run install-module AzureRM or run files from within the PreReq folder)
 
 V3.8 - Release 2

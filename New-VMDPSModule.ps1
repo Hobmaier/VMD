@@ -55,7 +55,7 @@ function New-VMDManifest
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '3.8' `
+        -ModuleVersion '3.9' `
         -RequiredModules 'AzureRM.Profile','AzureRM.Storage','AzureRM.Compute', 'AzureRM.Network', 'AzureRM.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `
@@ -70,7 +70,7 @@ function New-VMDManifestLinux
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '3.8' `
+        -ModuleVersion '3.9' `
         -RequiredModules 'Az.Profile','Az.Storage', 'Az.Compute', 'Az.Network', 'Az.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `

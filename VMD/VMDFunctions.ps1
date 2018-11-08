@@ -147,7 +147,7 @@ function Start-VMD
                 If (!$VM.State -eq 'Running')
                 {
                     Start-VM -name $VM.Name
-                    while ($VM.Heartbeat -ne 'OkApplicationsHealthy')
+                    while (($VM.Heartbeat -ne 'OkApplicationsHealthy') -or ($VM.Heartbeat -ne 'OkApplicationsUnknown'))
                     {
                         Start-Sleep -Seconds 10
                         Write-Host '.' -NoNewline
@@ -749,7 +749,8 @@ function New-VMDInstance
             $VM = Get-VM -name $VMName
             #Use Heartbeat, which indicates OS is responding. State ist Running after turning on
             Write-Host "`nWait until OS is ready"
-            while ($VM.Heartbeat -ne 'OkApplicationsHealthy')
+            #Windows 10 will never be OkApplicationsHealthy, it will be OkApplicationsUnknown 
+            while (($VM.Heartbeat -ne 'OkApplicationsHealthy') -or ($VM.Heartbeat -ne 'OkApplicationsUnknown'))
             {
                 Start-Sleep -Seconds 10
                 Write-Host '.' -NoNewline
