@@ -144,7 +144,7 @@ function Start-VMD
             if (($VM = Get-VM -Name $_ -ErrorAction SilentlyContinue) -ne $null)
             {
                 Write-Host "`nStart Hyper-V VM" $VM.Name
-                If (!$VM.State -eq 'Running')
+                If ($VM.State -ne 'Running')
                 {
                     Start-VM -name $VM.Name
                     while (($VM.Heartbeat -ne 'OkApplicationsHealthy') -and ($VM.Heartbeat -ne 'OkApplicationsUnknown'))
@@ -761,12 +761,13 @@ function New-VMDInstance
             Write-Host 'Post-Task Network'
             #Assign IP
             Get-VMNetworkAdapter -VMName $VMName | Set-VMNetworkConfiguration -IPAddress $VirtualMachine[2] -Subnet 255.255.255.0 -DefaultGateway 10.0.$SubnetOctet.1 -DNSServer 10.0.$SubnetOctet.10
-            Write-Host 'Wait 30 seconds to allow Firewall to configure before connecting through WMI'
-            Start-sleep -Seconds 30
+            Write-Host 'Wait 120 seconds to allow Firewall to configure before connecting through WMI'
+            Start-sleep -Seconds 120
             
             Write-Host 'Set Pagefile'
             #Pagefile - use IP to connect as no DNS
-            Set-PageFile -Path C:\pagefile.sys -InitialSize 4096 -MaximumSize 8192 -Computer $VirtualMachine[2] -Credentials $Credentials            
+            $PageFileResult = Set-PageFile -Path C:\pagefile.sys -InitialSize 4096 -MaximumSize 8192 -Computer $VirtualMachine[2] -Credentials $Credentials            
+            Write-Host $PageFileResult
             # Alternate
             # wmic computersystem set AutomaticManagedPagefile=True
             Write-Host 'Turn off VM - settings effective on next boot - except AD needed to authenticate' #Especially Set-Pagefile WMI
@@ -786,7 +787,7 @@ function New-VMDInstance
             #Activate Windows/Office
         }
         Write-Host "`nLast but not least, stop AD"
-        Stop-VM name $ADVM | Out-Null
+        Stop-VM -name $ADVM | Out-Null
     }
     $EndTime = Get-Date
     Write-Host 'Deployment took ' $EndTime.Subtract($StartTime)
@@ -1096,15 +1097,15 @@ function New-VMDHyperV
         AD {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-AD") -MemoryStartupBytes 1024MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-AD") -MemoryStartupBytes 1024MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-AD") -MemoryStartupBytes 768MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-AD") -MemoryStartupBytes 768MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-AD") -processorcount 2 -AutomaticStartDelay 300 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
 
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-AD201615161334.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-AD-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-AD201615161334.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-AD-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-AD") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-AD-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-AD") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-AD201615161334.vhd")
@@ -1116,18 +1117,18 @@ function New-VMDHyperV
         SQL {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-SQL") -MemoryStartupBytes 8096MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SQL") -MemoryStartupBytes 8096MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-SQL") -MemoryStartupBytes 7168MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SQL") -MemoryStartupBytes 7168MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-SQL") -processorcount 4 -AutomaticStartDelay 420 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL201615163329.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-differencing.vhd")
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data1.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data1-differencing.vhd")
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data2.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data2-differencing.vhd")
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data3.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data3-differencing.vhd")
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data4.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data4-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL201615163329.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data1.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data1-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data2.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data2-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data3.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data3-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SQL-data4.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data4-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SQL") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SQL") -ControllerType SCSI -ControllerNumber 0 -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data1-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SQL") -ControllerType SCSI -ControllerNumber 0 -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SQL-data2-differencing.vhd")
@@ -1145,14 +1146,14 @@ function New-VMDHyperV
         SP2013 {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2013") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2013") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2013") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2013") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-SP2013") -processorcount 4 -AutomaticStartDelay 720 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2013201618131334.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2013-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2013201618131334.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2013-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2013") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2013-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2013") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP2013201618131334.vhd")
@@ -1162,14 +1163,14 @@ function New-VMDHyperV
         SP2016 {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2016") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-SP2016") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2016-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2016") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP2016201622215411.vhd")
@@ -1179,14 +1180,14 @@ function New-VMDHyperV
         SP2019 {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 14336MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-SP2019") -MemoryStartupBytes 12288MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-SP2019") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-SP2019-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-SP2019") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-SP201920181023114007.vhd")
@@ -1196,15 +1197,15 @@ function New-VMDHyperV
         Office {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-Office") -MemoryStartupBytes 4096MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-Office") -MemoryStartupBytes 4096MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-Office") -MemoryStartupBytes 3072MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-Office") -MemoryStartupBytes 3072MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 
                 set-vm -name ("$($Prefix)-Contoso-Office") -processorcount 2 -AutomaticStartDelay 900 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-Office2016822162630.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Office-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-Office2016822162630.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Office-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Office") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Office-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Office") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-Office2016822162630.vhd")
@@ -1214,14 +1215,14 @@ function New-VMDHyperV
         Mail {
                 If (!$ConfigureMinimumRAM)
                 {
-                    new-vm -Name ("$($Prefix)-Contoso-Mail") -MemoryStartupBytes 8192MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-Mail") -MemoryStartupBytes 8192MB -Generation 1 -BootDevice IDE -NoVHD
                 } else {
-                    new-vm -Name ("$($Prefix)-Contoso-Mail") -MemoryStartupBytes 6144MB -Generation 1 -BootDevice IDE -NoVHD
+                    $null = new-vm -Name ("$($Prefix)-Contoso-Mail") -MemoryStartupBytes 6144MB -Generation 1 -BootDevice IDE -NoVHD
                 }
                 set-vm -name ("$($Prefix)-Contoso-Mail") -processorcount 2 -AutomaticStartDelay 1200 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
                 If ($UseDifferencingDisks)
                 {
-                    New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-Mail20170425162213.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Mail-differencing.vhd")
+                    $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "Contoso-Mail20170425162213.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Mail-differencing.vhd")
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Mail") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Mail-differencing.vhd")
                 } else {
                     Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Mail") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "Contoso-Mail20170425162213.vhd")
@@ -1231,14 +1232,14 @@ function New-VMDHyperV
         Client {
             If (!$ConfigureMinimumRAM)
             {
-                new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 4096MB -Generation 1 -BootDevice IDE -NoVHD
+                $null = new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 4096MB -Generation 1 -BootDevice IDE -NoVHD
             } else {
-                new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 2048MB -Generation 1 -BootDevice IDE -NoVHD
+                $null = new-vm -Name ("$($Prefix)-Contoso-Client") -MemoryStartupBytes 2048MB -Generation 1 -BootDevice IDE -NoVHD
             }
             set-vm -name ("$($Prefix)-Contoso-Client") -processorcount 4 -AutomaticStartDelay 600 -AutomaticStartAction StartIfRunning -AutomaticStopAction Save
             If ($UseDifferencingDisks)
             {
-                New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "DNS8-Contoso-CL20180517145702.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Client-differencing.vhd")
+                $null = New-VHD -Differencing -ParentPath (Join-Path -Path $Path -ChildPath "DNS8-Contoso-CL20180517145702.vhd") -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Client-differencing.vhd")
                 Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Client") -ControllerType IDE -Path (Join-Path -Path $HyperVRootVHDPath -ChildPath "Contoso-Client-differencing.vhd")
             } else {
                 Add-VMHardDiskDrive -VMName ("$($Prefix)-Contoso-Client") -ControllerType IDE -Path (Join-Path -Path $Path -ChildPath "DNS8-Contoso-CL20180517145702.vhd")
@@ -1443,7 +1444,8 @@ function Set-PageFile
             }
             if ($PSCmdlet.ShouldProcess("Page file $Path", "Set initial size to $InitialSize and maximum size to $MaximumSize"))
             {
-                Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{Name=$Path; InitialSize = $InitialSize; MaximumSize = $MaximumSize} -ComputerName $Computer -Credential $Credentials
+                $WmiResult = Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{Name=$Path; InitialSize = $InitialSize; MaximumSize = $MaximumSize} -ComputerName $Computer -Credential $Credentials
+                return $WmiResult
             }
         }
     }
