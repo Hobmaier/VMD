@@ -44,7 +44,8 @@ V3.9
 - Fix: Hyper-V reduced output on disk and vm creation
 - Fix: Hyper-V AD VM will be stopped at the end now
 - Fix: Hyper-V Start issue
-- Fix: Hyper-V Set-Pagefile still has issues, increased wait time to 120s
+- Fix: Hyper-V Set-Pagefile fixed
+- Fix: Hyper-V Switches UseDifferencingDisk and ConfigureMinimumRAM have been always used
 - New: Updated Pre-Req files folder (either run install-module AzureRM or run files from within the PreReq folder)
 
 V3.8 - Release 2

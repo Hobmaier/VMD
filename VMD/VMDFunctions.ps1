@@ -736,9 +736,29 @@ function New-VMDInstance
         $ADVM = $null
         foreach ($VirtualMachine in $VirtualMachines)
         {
+            #Bugfix: Different switches UseDifferencingDisks and ConfigureMinimumRAM and their combinations
             Write-Host 'Create VM on Hyper-V' $InstanceName"-"$($VirtualMachine[0])
-            
-            New-VMDHyperV -Path $Path -Prefix $Prefix -VirtualMachinePartialName $VirtualMachine[0] -ConfigureMinimumRAM -HyperVHostIP $HyperVHostVMIP -UseDifferencingDisks -DifferencingVHDPath $DifferencingVHDPath
+            Write-Verbose "switch ConfigureMinimumRAM $CreateWithMinRAM"
+            Write-Verbose "switch UseDifferencingDisks $UseDifferencingDisks"
+            if (($CreateWithMinRAM) -and ($UseDifferencingDisks)) {
+                New-VMDHyperV -Path $Path -Prefix $Prefix -VirtualMachinePartialName $VirtualMachine[0] `
+                    -HyperVHostIP $HyperVHostVMIP `
+                    -ConfigureMinimumRAM `
+                    -UseDifferencingDisks `
+                    -DifferencingVHDPath $DifferencingVHDPath
+            } elseif (($CreateWithMinRAM) -and (!$UseDifferencingDisks)) {
+                New-VMDHyperV -Path $Path -Prefix $Prefix -VirtualMachinePartialName $VirtualMachine[0] `
+                    -HyperVHostIP $HyperVHostVMIP `
+                    -ConfigureMinimumRAM
+            } elseif ((!$CreateWithMinRAM) -and ($UseDifferencingDisks)) {
+                New-VMDHyperV -Path $Path -Prefix $Prefix -VirtualMachinePartialName $VirtualMachine[0] `
+                    -HyperVHostIP $HyperVHostVMIP `
+                    -UseDifferencingDisks `
+                    -DifferencingVHDPath $DifferencingVHDPath                
+            } else {
+                New-VMDHyperV -Path $Path -Prefix $Prefix -VirtualMachinePartialName $VirtualMachine[0] `
+                -HyperVHostIP $HyperVHostVMIP `
+            }
             
             Write-Host 'Done'
             $VMName = $InstanceName + "-" + $VirtualMachine[0]
@@ -761,8 +781,8 @@ function New-VMDInstance
             Write-Host 'Post-Task Network'
             #Assign IP
             Get-VMNetworkAdapter -VMName $VMName | Set-VMNetworkConfiguration -IPAddress $VirtualMachine[2] -Subnet 255.255.255.0 -DefaultGateway 10.0.$SubnetOctet.1 -DNSServer 10.0.$SubnetOctet.10
-            Write-Host 'Wait 120 seconds to allow Firewall to configure before connecting through WMI'
-            Start-sleep -Seconds 120
+            Write-Host 'Wait 60 seconds to allow Firewall to configure before connecting through WMI'
+            Start-sleep -Seconds 60
             
             Write-Host 'Set Pagefile'
             #Pagefile - use IP to connect as no DNS
@@ -1411,43 +1431,44 @@ function Set-PageFile
         }
     }
 
-    $CurrentPageFile = Get-WmiObject -Class Win32_PageFileSetting -ComputerName $Computer -Credential $Credentials
-    if ($CurrentPageFile -ne $null) #Just continue if previous command did succeed
+    $CurrentPageFiles = Get-WmiObject -Class Win32_PageFileSetting -ComputerName $Computer -Credential $Credentials
+    #If vm has multiple drives, there could be more pagefile settings
+    if ($CurrentPageFiles.Count -gt 1)
     {
-        if ($CurrentPageFile.Name -eq $Path)
+        #Just use first drive, assume it will be C:
+        $CurrentPageFile = $CurrentPageFiles[0]
+    }
+    if ($CurrentPageFile.Name -eq $Path)
+    {
+        # Keeps the existing page file
+        if ($CurrentPageFile.InitialSize -ne $InitialSize)
         {
-            # Keeps the existing page file
-            if ($CurrentPageFile.InitialSize -ne $InitialSize)
-            {
-                $CurrentPageFile.InitialSize = $InitialSize
-                $Modified = $true
-            }
-            if ($CurrentPageFile.MaximumSize -ne $MaximumSize)
-            {
-                $CurrentPageFile.MaximumSize = $MaximumSize
-                $Modified = $true
-            }
-            if ($Modified)
-            {
-                if ($PSCmdlet.ShouldProcess("Page file $Path", "Set initial size to $InitialSize and maximum size to $MaximumSize"))
-                {
-                    $CurrentPageFile.Put()
-                }
-            }
+            $CurrentPageFile.InitialSize = $InitialSize
+            $Modified = $true
         }
-        else
+        if ($CurrentPageFile.MaximumSize -ne $MaximumSize)
         {
-            # Creates a new page file
-            if ($PSCmdlet.ShouldProcess("Page file $($CurrentPageFile.Name)", 'Delete old page file'))
-            {
-                $CurrentPageFile.Delete()
-            }
+            $CurrentPageFile.MaximumSize = $MaximumSize
+            $Modified = $true
+        }
+        if ($Modified)
+        {
             if ($PSCmdlet.ShouldProcess("Page file $Path", "Set initial size to $InitialSize and maximum size to $MaximumSize"))
             {
-                $WmiResult = Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{Name=$Path; InitialSize = $InitialSize; MaximumSize = $MaximumSize} -ComputerName $Computer -Credential $Credentials
-                return $WmiResult
+                $CurrentPageFile.Put()
             }
         }
+    } else {
+        # Creates a new page file
+        if ($PSCmdlet.ShouldProcess("Page file $($CurrentPageFile.Name)", 'Delete old page file'))
+        {
+            $CurrentPageFile.Delete()
+        }
+        if ($PSCmdlet.ShouldProcess("Page file $Path", "Set initial size to $InitialSize and maximum size to $MaximumSize"))
+        {
+            $WmiResult = Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{Name=$Path; InitialSize = $InitialSize; MaximumSize = $MaximumSize} -ComputerName $Computer -Credential $Credentials
+            return $WmiResult
+        }  
     }
 }
 
