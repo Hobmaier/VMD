@@ -19,7 +19,7 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 https://www.hobmaier.net
 
 #>
-Write-Host 'VMD Module Version V 3.9'
+Write-Host 'VMD Module Version V 4.0'
 . $PSScriptRoot\VMDFunctions.ps1
 
 # Release history has moved to readme.md

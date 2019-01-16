@@ -19,7 +19,7 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
 https://www.hobmaier.net
 
 #>
-Write-Host 'VMD Module Version V 3.9'
+Write-Host 'VMD Module Version V 4.0'
 . "$PSScriptRoot/VMDFunctions.ps1"
 
 #Load Azure
@@ -28,7 +28,7 @@ import-module Az.Network -ErrorAction Stop
 Import-Module Az.Storage -ErrorAction Stop
 Import-Module Az.Compute -ErrorAction Stop
 Import-Module Az.Resources -ErrorAction Stop
-Import-Module Az.Profile -ErrorAction Stop
+Import-Module Az.Accounts -ErrorAction Stop
 
 Write-Host 'Login to Azure Portal'
 Write-Host '  Use "Connect-VMD" to login'
