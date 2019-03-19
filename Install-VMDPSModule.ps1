@@ -38,7 +38,7 @@ foreach ($path in $paths)
     #Another method: 
     #[Environment]::GetEnvironmentVariable('PSModulePath','User').split(";")
     #Fix OfficeDevPnP exclusion as it adds itself to into $env:PSModulePath
-    if (($path.Indexof('\Users\') -gt 0) -and ($path.Indexof('OfficeDevPnP') -lt 0) -and ($path.Indexof('SharePointPnPPowerShellOnline') -lt 0) -and ($path.Indexof('.vscode') -lt 0))
+    if (($path.Indexof(('\Users\').ToLower()) -gt 0) -and ($path.Indexof('OfficeDevPnP') -lt 0) -and ($path.Indexof('SharePointPnPPowerShellOnline') -lt 0) -and ($path.Indexof('.vscode') -lt 0))
     {
          Write-Host 'Install PowerShell Module to ' $path
          If (!$path)

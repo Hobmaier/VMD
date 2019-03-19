@@ -39,6 +39,7 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 # History
 V4.0
 - Fix: Azure CLI module Az-Profile is now Az-Accounts
+- Fix: Install now compares againts lcase /users/ to install PowerShell module into (e.g. folder redirect is being used and foldername is lower case)
 
 V3.9
 - Fix: Hyper-V SP2016 got created duplicate VM
