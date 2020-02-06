@@ -1,16 +1,20 @@
 # SYNOPSIS
+
 This module provisions Virtual Machines accross Azure and Hyper-V. It's a set of multiple VMs.
 
-# DESCRIPTION
+## DESCRIPTION
+
 Use this script to provision / duplicate demo environments (which ware not generalized). It copies vhd files directly and creates new VM definition in Azure. My case was SharePoint environment including (AD, SQL, SharePoint 2013 & 2016, Office Online, Exchange, Windows Client). This can be useful within companies to distribute same test or dev environment.
 New is it to download those vhd only and then to create VMs on Hyper-V
 
-# EXAMPLE
+## EXAMPLE
+
 ./Import-Module VMD
 connect-VMD
 New-VMDInstance -Prefix QA
 
-# NOTES
+## NOTES
+
 All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailserver, Office Online...
 
 # Getting Started
@@ -33,10 +37,14 @@ All examples based on SharePoint with dependency on AD, SQL, SharePoint, Mailser
   - Start-VMD to start a defined set of VMs, in the correct order
   - Stop-VMD to stop them in the right order
 
-# LINK
+## LINK
 My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier.net
 
-# History
+## History
+
+V4.1
+- Fix: Updated Azcopy.exe V8.1 (take care V10 doesn't support storage keys anymore!)
+
 V4.0
 - Fix: Azure CLI module Az-Profile is now Az-Accounts
 - Fix: Install now compares againts lcase /users/ to install PowerShell module into (e.g. folder redirect is being used and foldername is lower case)
