@@ -310,9 +310,15 @@ function New-VMDInstance
     .PARAMETER DifferencingVHDPath
         Use Path provided instead of default Hyper-V VHD folder.
 
+    .PARAMETER InternalIPonly
+        Use this parameter will only assign intern IP address. You will need Azure VPN Gateway to connect to the VM later.
+
     .EXAMPLE
         New-VMDInstance -Prefix DEV
         Easiest one, create a new copy in Azure, previous selected subscription, Prefix will be the unique Identifier for Resource Groups, VM Names etc.
+    .EXAMPLE
+        New-VMDInstance -Prefix DEV -UseManagedDisks -InternalIPonly
+        Creates VM in Azure, adds Prefix DEV, converts disks to Managed Disks and does not assign public IP for security purpose (needs VPN to connect to).
     .EXAMPLE
         New-VMDInstance -Prefix DEV -UseManagedDisks -DeployMinimalSet
         Creates VM in Azure, adds Prefix DEV, converts disks to Managed Disks and only creates three VMs AD, SQL, SP2016.
@@ -376,7 +382,11 @@ function New-VMDInstance
         [Parameter(Mandatory=$false, ParameterSetName = 'HyperV')]
             [string]
             [ValidateScript({Test-Path $_})]
-        $DifferencingVHDPath
+        $DifferencingVHDPath,
+
+        [Parameter(Mandatory = $false, ParameterSetName = 'Azure')]
+        [switch]
+        $InternalIPonly
     )
 
     
@@ -683,7 +693,8 @@ function New-VMDInstance
                     -Data1DiskUri "$($VMStorageData1.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data1.vhd" `
                     -Data2DiskUri "$($VMStorageData2.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data2.vhd" `
                     -Data3DiskUri "$($VMStorageData3.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data3.vhd" `
-                    -Data4DiskUri "$($VMStorageData4.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data4.vhd"
+                    -Data4DiskUri "$($VMStorageData4.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data4.vhd" `
+                    -InternalIPRoutingonly $InternalIPonly
                 Write-host 'Success' $vm -ForegroundColor Green   
                 Start-Sleep -Seconds 30                 
             } else {
@@ -711,7 +722,8 @@ function New-VMDInstance
                         -PrivateIPAddress $VirtualMachine[2] `
                         -SubnetID $Vnet.Subnets[0].Id `
                         -OSDiskUri $OSDiskUri `
-                        -LocationName $LocationName
+                        -LocationName $LocationName `
+                        -InternalIPRoutingonly $InternalIPonly
                 Write-host 'Success' $vm -ForegroundColor Green
                 If ($VirtualMachine[0] -eq 'AD')
                 {
@@ -857,7 +869,10 @@ function New-VMDVM
         $Data3DiskUri,
             [Parameter(Mandatory = $false)]
             [string]
-        $Data4DiskUri
+        $Data4DiskUri,
+            [Parameter(Mandatory = $false)]
+            [switch]
+        $InternalIPRoutingonly
     )
 
     
@@ -873,25 +888,32 @@ function New-VMDVM
     ## Networking
     $DNSNameLabel = 's2s' + $VMAzureFriendlyName # mydnsname.westus.cloudapp.azure.com
 
-    $PIP = New-AzureRmPublicIpAddress -Name $VMName -DomainNameLabel $DNSNameLabel -ResourceGroupName $ResourceGroup.ResourceGroupName -Location $LocationName -AllocationMethod Dynamic -ErrorAction Stop
-    # Create an inbound network security group rule for port 3389
-    $nsgRuleRDP = New-AzureRmNetworkSecurityRuleConfig `
-        -Name default-allow-rdp  `
-        -Protocol Tcp `
-        -Direction Inbound `
-        -Priority 1000 `
-        -SourceAddressPrefix * `
-        -SourcePortRange * `
-        -DestinationAddressPrefix * `
-        -DestinationPortRange 3389 `
-        -Access Allow 
-    # Create a network security group
-    $nsg = New-AzureRmNetworkSecurityGroup `
-        -ResourceGroupName $ResourceGroup.ResourceGroupName `
-        -Location $LocationName `
-        -Name "$($VMName)nsg" `
-        -SecurityRules $nsgRuleRDP           
-    $NIC = New-AzureRmNetworkInterface -Name $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName -Location $LocationName -SubnetId $SubnetID -PublicIpAddressId $PIP.Id -PrivateIpAddress $PrivateIPAddress -DnsServer '10.0.0.10' -NetworkSecurityGroupID $nsg.Id -ErrorAction Stop
+    If (!$InternalIPRoutingonly) { 
+        #Public IP will be assigned
+        $PIP = New-AzureRmPublicIpAddress -Name $VMName -DomainNameLabel $DNSNameLabel -ResourceGroupName $ResourceGroup.ResourceGroupName -Location $LocationName -AllocationMethod Dynamic -ErrorAction Stop
+        # Create an inbound network security group rule for port 3389
+        $nsgRuleRDP = New-AzureRmNetworkSecurityRuleConfig `
+            -Name default-allow-rdp  `
+            -Protocol Tcp `
+            -Direction Inbound `
+            -Priority 1000 `
+            -SourceAddressPrefix * `
+            -SourcePortRange * `
+            -DestinationAddressPrefix * `
+            -DestinationPortRange 3389 `
+            -Access Allow 
+        # Create a network security group
+        $nsg = New-AzureRmNetworkSecurityGroup `
+            -ResourceGroupName $ResourceGroup.ResourceGroupName `
+            -Location $LocationName `
+            -Name "$($VMName)nsg" `
+            -SecurityRules $nsgRuleRDP     
+            $NIC = New-AzureRmNetworkInterface -Name $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName -Location $LocationName -SubnetId $SubnetID -PublicIpAddressId $PIP.Id -PrivateIpAddress $PrivateIPAddress -DnsServer '10.0.0.10' -NetworkSecurityGroupID $nsg.Id -ErrorAction Stop
+    } else {
+        #only internal ip adress assigned
+        $NIC = New-AzureRmNetworkInterface -Name $VMName -ResourceGroupName $ResourceGroup.ResourceGroupName -Location $LocationName -SubnetId $SubnetID -PrivateIpAddress $PrivateIPAddress -DnsServer '10.0.0.10' -ErrorAction Stop
+    }
+    
 
     $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize -ErrorAction Stop
     

@@ -55,7 +55,7 @@ function New-VMDManifest
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '4.0' `
+        -ModuleVersion '4.2' `
         -RequiredModules 'AzureRM.Profile','AzureRM.Storage','AzureRM.Compute', 'AzureRM.Network', 'AzureRM.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `
@@ -70,7 +70,7 @@ function New-VMDManifestLinux
         -Author 'Dennis Hobmaier' `
         -CompanyName 'Solutions2Share' `
         -Description 'Manage VMD VMs in Azure' `
-        -ModuleVersion '4.0' `
+        -ModuleVersion '4.2' `
         -RequiredModules 'Az.Accounts','Az.Storage', 'Az.Compute', 'Az.Network', 'Az.Resources' `
         -FunctionsToExport 'Connect-VMD','Start-VMD','Stop-VMD','Select-VMDAzureSubscription',`
             'New-VMDInstance','Get-VMDStatus','Get-VMDResourceGroup','Select-VMDResourceGroup','New-VMDVM', `
@@ -98,7 +98,7 @@ Write-host 'Installing VMD PowerShell Module'
 $paths = $env:PSModulePath.Split(';')
 foreach ($path in $paths)
 {
-    if (($path.Indexof('\Users\').ToLower()) -gt 0) -and ($path.Indexof('OfficeDevPnP') -lt 0) -and ($path.Indexof('SharePointPnPPowerShellOnline') -lt 0) -and ($path.Indexof('.vscode') -lt 0))
+    if (($path.Indexof('\Users\')) -gt 0 -and ($path.Indexof('OfficeDevPnP') -lt 0) -and ($path.Indexof('SharePointPnPPowerShellOnline') -lt 0) -and ($path.Indexof('.vscode') -lt 0))
     {
          Write-Host 'Install PowerShell Module to ' $path
          Copy-Item $PSScriptRoot\VMD $path -Force -Recurse -ErrorAction stop

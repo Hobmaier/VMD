@@ -42,6 +42,9 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 
 ## History
 
+V4.2
+- New: Added switch InternalIPonly that no public IP and now network security group are assigned
+
 V4.1
 - Fix: Updated Azcopy.exe V8.1 (take care V10 doesn't support storage keys anymore!)
 
