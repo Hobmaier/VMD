@@ -404,7 +404,7 @@ function New-VMDInstance
     {
         $VirtualMachines = @('AD', 'Standard_A0', "10.0.$SubnetOctet.10"), `
                         @('SQL','Standard_DS2_v2', "10.0.$SubnetOctet.11"), `
-                        @('SP2016','Standard_D4s_v3', "10.0.$SubnetOctet.13")
+                        @('SP2019','Standard_D4s_v3', "10.0.$SubnetOctet.17")
     } else {
         $VirtualMachines = @('AD', 'Standard_A0', "10.0.$SubnetOctet.10"), `
                         @('SQL','Standard_DS2_v2', "10.0.$SubnetOctet.11"), `
@@ -580,9 +580,9 @@ function New-VMDInstance
             $AZcopy = "& ""$AZcopy"""
             If (!$DownloadOnly)
             {
-                $AZcopy += " /Source:$($SourceStorageURLOS) /Dest:$($VMStorageOS.PrimaryEndpoints.Blob)vhds /DestKey:$($DestStorageKeyOS.Value[0]) /SourceKey:$($SourceStorageKeyOS) /S /Z:$($AZJournal) /V:$($AZVerboseLog) /Pattern:Contoso-SP2016201622215411.vhd"
+                $AZcopy += " /Source:$($SourceStorageURLOS) /Dest:$($VMStorageOS.PrimaryEndpoints.Blob)vhds /DestKey:$($DestStorageKeyOS.Value[0]) /SourceKey:$($SourceStorageKeyOS) /S /Z:$($AZJournal) /V:$($AZVerboseLog) /Pattern:Contoso-SP201920181023114007.vhd"
             } else {
-                $AZcopy += " /Source:$($SourceStorageURLOS) /Dest:$Path /SourceKey:$($SourceStorageKeyOS) /S /Z:$($AZJournal) /V:$($AZVerboseLog) /Pattern:Contoso-SP2016201622215411.vhd"
+                $AZcopy += " /Source:$($SourceStorageURLOS) /Dest:$Path /SourceKey:$($SourceStorageKeyOS) /S /Z:$($AZJournal) /V:$($AZVerboseLog) /Pattern:Contoso-SP201920181023114007.vhd"
             }
             Write-host 'Copy vhd file for SP2013'
             Invoke-Expression $AZcopy -ErrorAction Stop        
@@ -683,18 +683,36 @@ function New-VMDInstance
             if ($VirtualMachine[0] -eq 'SQL') {
                     Write-Host 'Create VM ' $InstanceName"-"$($VirtualMachine[0])
                     
-                    $VM = New-VMDVM -InstanceName $InstanceName `
-                    -VirtualMachinePartialName $VirtualMachine[0] `
-                    -VMSize $VirtualMachine[1] `
-                    -PrivateIPAddress $VirtualMachine[2] `
-                    -SubnetID $Vnet.Subnets[0].Id `
-                    -OSDiskUri "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SQL201615163329.vhd" `
-                    -LocationName $LocationName `
-                    -Data1DiskUri "$($VMStorageData1.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data1.vhd" `
-                    -Data2DiskUri "$($VMStorageData2.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data2.vhd" `
-                    -Data3DiskUri "$($VMStorageData3.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data3.vhd" `
-                    -Data4DiskUri "$($VMStorageData4.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data4.vhd" `
-                    -InternalIPRoutingonly $InternalIPonly
+                    If($InternalIPonly)
+                    {
+                        #Internal IP
+                        $VM = New-VMDVM -InstanceName $InstanceName `
+                        -VirtualMachinePartialName $VirtualMachine[0] `
+                        -VMSize $VirtualMachine[1] `
+                        -PrivateIPAddress $VirtualMachine[2] `
+                        -SubnetID $Vnet.Subnets[0].Id `
+                        -OSDiskUri "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SQL201615163329.vhd" `
+                        -LocationName $LocationName `
+                        -InternalIPRoutingonly `
+                        -Data1DiskUri "$($VMStorageData1.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data1.vhd" `
+                        -Data2DiskUri "$($VMStorageData2.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data2.vhd" `
+                        -Data3DiskUri "$($VMStorageData3.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data3.vhd" `
+                        -Data4DiskUri "$($VMStorageData4.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data4.vhd"
+                    } else {
+                        #Public IP
+                        $VM = New-VMDVM -InstanceName $InstanceName `
+                        -VirtualMachinePartialName $VirtualMachine[0] `
+                        -VMSize $VirtualMachine[1] `
+                        -PrivateIPAddress $VirtualMachine[2] `
+                        -SubnetID $Vnet.Subnets[0].Id `
+                        -OSDiskUri "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/Contoso-SQL201615163329.vhd" `
+                        -LocationName $LocationName `
+                        -Data1DiskUri "$($VMStorageData1.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data1.vhd" `
+                        -Data2DiskUri "$($VMStorageData2.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data2.vhd" `
+                        -Data3DiskUri "$($VMStorageData3.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data3.vhd" `
+                        -Data4DiskUri "$($VMStorageData4.PrimaryEndpoints.Blob)vhds/Contoso-SQL-data4.vhd"
+                    }
+
                 Write-host 'Success' $vm -ForegroundColor Green   
                 Start-Sleep -Seconds 30                 
             } else {
@@ -716,14 +734,28 @@ function New-VMDInstance
                     $OSDiskUri = "$($VMStorageOS.PrimaryEndpoints.Blob)vhds/DNS8-Contoso-CL20180517145702.vhd"
                 } 
 
-                $vm = New-VMDVM -InstanceName $InstanceName `
-                        -VirtualMachinePartialName $VirtualMachine[0] `
-                        -VMSize $VirtualMachine[1] `
-                        -PrivateIPAddress $VirtualMachine[2] `
-                        -SubnetID $Vnet.Subnets[0].Id `
-                        -OSDiskUri $OSDiskUri `
-                        -LocationName $LocationName `
-                        -InternalIPRoutingonly $InternalIPonly
+                If($InternalIPonly) 
+                {
+                    #Only setup internal IP
+                    $vm = New-VMDVM -InstanceName $InstanceName `
+                    -VirtualMachinePartialName $VirtualMachine[0] `
+                    -VMSize $VirtualMachine[1] `
+                    -PrivateIPAddress $VirtualMachine[2] `
+                    -SubnetID $Vnet.Subnets[0].Id `
+                    -OSDiskUri $OSDiskUri `
+                    -LocationName $LocationName `
+                    -InternalIPRoutingonly
+                } else {
+                    #Add public IP
+                    $vm = New-VMDVM -InstanceName $InstanceName `
+                    -VirtualMachinePartialName $VirtualMachine[0] `
+                    -VMSize $VirtualMachine[1] `
+                    -PrivateIPAddress $VirtualMachine[2] `
+                    -SubnetID $Vnet.Subnets[0].Id `
+                    -OSDiskUri $OSDiskUri `
+                    -LocationName $LocationName
+                }
+
                 Write-host 'Success' $vm -ForegroundColor Green
                 If ($VirtualMachine[0] -eq 'AD')
                 {
@@ -741,6 +773,17 @@ function New-VMDInstance
                 Write-Host 'Done. VM starting again - wait 2 minutes ;-)'
                 Start-Sleep -Seconds 120
             }
+        }
+        #Cleanup storage accounts in case of using managed disks
+        If ($UseManagedDisks)
+        {
+            Write-Host 'You are using managed disks, now going to cleanup storage accounts as they are not needed anymore...'
+            Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroup -Name $VMStorageOS.StorageAccountName -ErrorAction SilentlyContinue
+            Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroup -Name $VMStorageData1.StorageAccountName -ErrorAction SilentlyContinue
+            Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroup -Name $VMStorageData2.StorageAccountName -ErrorAction SilentlyContinue
+            Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroup -Name $VMStorageData3.StorageAccountName -ErrorAction SilentlyContinue
+            Remove-AzureRmStorageAccount -ResourceGroupName $ResourceGroup -Name $VMStorageData4.StorageAccountName -ErrorAction SilentlyContinue
+            Write-Host 'Cleanup done'
         }
         
     } elseif ($DeployToLocalHyperV)
@@ -830,49 +873,60 @@ function New-VMDInstance
 function New-VMDVM
 {
     param(
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $InstanceName,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $VirtualMachinePartialName,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $VMSize,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $PrivateIPAddress,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $SubnetID,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $OSDiskUri,
-            [Parameter(Mandatory = $true)]
-            [ValidateNotNullOrEmpty()]
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
             [string]
         $LocationName,
-            [Parameter(Mandatory = $false)]
+
+        [Parameter(Mandatory = $false)]
+            [switch]
+        $InternalIPRoutingonly,
+
+        [Parameter(Mandatory = $false)]
             [string]
         $Data1DiskUri,
-            [Parameter(Mandatory = $false)]
+
+        [Parameter(Mandatory = $false)]
             [string]
         $Data2DiskUri,
-            [Parameter(Mandatory = $false)]
+
+        [Parameter(Mandatory = $false)]
             [string]
         $Data3DiskUri,
-            [Parameter(Mandatory = $false)]
+
+        [Parameter(Mandatory = $false)]
             [string]
-        $Data4DiskUri,
-            [Parameter(Mandatory = $false)]
-            [switch]
-        $InternalIPRoutingonly
+        $Data4DiskUri
     )
 
     
@@ -915,15 +969,14 @@ function New-VMDVM
     }
     
 
-    $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize -ErrorAction Stop
+    #Enable hybrid license benefit: -LicenseType "Windows_Server"
+    $VirtualMachine = New-AzureRmVMConfig -VMName $VMName -VMSize $VMSize -LicenseType "Windows_Server" -ErrorAction Stop 
     
     # Disabled as we're using custom image and attach
     #$VirtualMachine = Set-AzureRmVMOperatingSystem -VM $VirtualMachine -Windows -ComputerName $ComputerName -Credential $Credential -ProvisionVMAgent -EnableAutoUpdate
     $VirtualMachine = Add-AzureRmVMNetworkInterface -VM $VirtualMachine -Id $NIC.Id -ErrorAction Stop
 
     $VirtualMachine = Set-AzureRmVMOSDisk -VM $VirtualMachine -Name $VirtualMachinePartialName -VhdUri $OSDiskUri -Caching $OSDiskCaching -CreateOption $OSCreateOption -Windows -ErrorAction Stop
- 
-
     if ($Data1DiskUri)
     {
         Add-AzureRmVMDataDisk -CreateOption attach -Name 'Contoso-SQL-data1' -VhdUri $Data1DiskUri -Caching None -vm $VirtualMachine -DiskSizeInGB 20 -Lun 0 -ErrorAction Stop
@@ -1313,7 +1366,7 @@ Function Set-VMNetworkConfiguration {
         [Parameter(Mandatory=$true,
                    Position=1,
                    ParameterSetName='Static')]
-        [String[]]$IPAddress=@(),
+        [String[]]$IPAddress,
 
         [Parameter(Mandatory=$false,
                    Position=2,

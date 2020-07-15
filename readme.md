@@ -44,6 +44,9 @@ My Blog and Podcast about SharePoint, Office 365 and Azure: https://www.hobmaier
 
 V4.2
 - New: Added switch InternalIPonly that no public IP and now network security group are assigned
+- New: Switch DeployMinimalSet now SP2019 instead of SP2016 by default
+- New: Enable hybrid benefit license by default
+- New: Delete Storage Accounts if Managed Disks are used and VMs are converted
 
 V4.1
 - Fix: Updated Azcopy.exe V8.1 (take care V10 doesn't support storage keys anymore!)
